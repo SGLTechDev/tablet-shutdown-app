@@ -1,7 +1,10 @@
 package com.sgltechdev.tabletshutdownapp
 
 import android.app.ActivityManager
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -35,19 +38,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleShutdown(minutes: Long) {
         val delayMillis = TimeUnit.MINUTES.toMillis(minutes)
-        Thread.sleep(delayMillis)
-        shutdownDevice()
-    }
-
-    private fun shutdownDevice() {
-        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        if (activityManager.isSystemReady) {
-            try {
-                val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-                powerManager.goToSleep(System.currentTimeMillis())
-            } catch (e: SecurityException) {
-                Toast.makeText(this, "Permission denied to shutdown device", Toast.LENGTH_SHORT).show()
-            }
-        }
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, ShutdownReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0)
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delayMillis, pendingIntent)
+        Toast.makeText(this, "Shutdown scheduled in $minutes minutes", Toast.LENGTH_SHORT).show()
     }
 }
